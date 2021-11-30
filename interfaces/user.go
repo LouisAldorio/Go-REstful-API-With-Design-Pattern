@@ -8,4 +8,5 @@ type UserController interface {
 	Register(*gin.Context)
 	Login(*gin.Context)
 	Me(*gin.Context)
+	GetAll(*gin.Context)
 }

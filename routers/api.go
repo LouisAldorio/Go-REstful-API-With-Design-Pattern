@@ -5,6 +5,7 @@ import (
 
 	"myapp/controllers"
 
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,6 +17,8 @@ func ApiRoute(router *gin.Engine) {
 	router.POST("/user/register", controllers.UserController.Register)
 	router.POST("/user/login", controllers.UserController.Login)
 	router.GET("/user/me", controllers.UserController.Me)
+
+	router.GET("/users", controllers.UserController.GetAll)
 
 	// Todo
 	router.GET("/todos", controllers.TodoController.GetAll)

@@ -3,9 +3,12 @@ package models
 import "time"
 
 type Todo struct {
-	ID        int        `json:"id" gorm:"type:int;autoIncrement;not null"`
-	Name      string     `json:"name" gorm:"type:varchar(80);not null"`
-	IsDone    int        `json:"is_active" gorm:"type:int;not null"`
-	CreatedAt time.Time  `json:"created_at" gorm:"type:timestamp;not null"`
-	UpdatedAt *time.Time `json:"updated_at" gorm:"type:timestamp;null"`
+	ID        int       `json:"id" gorm:"column:id"`
+	Name      string    `json:"name" gorm:"column:name"`
+	IsDone    bool       `json:"is_done" gorm:"column:is_done"`
+	CreatedAt time.Time `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"column:updated_at"`
+	UserID    int       `json:"user_id" gorm:"column:user_id"`
+
+	// User User `json:"user" gorm:"-"`
 }

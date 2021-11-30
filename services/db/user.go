@@ -7,6 +7,18 @@ import (
 	"gorm.io/gorm"
 )
 
+func (db *db) UserGetAll() ([]*models.User, error) {
+
+	var users []*models.User
+	err := db.Tx.Find(&users).Error
+	if err != nil {
+		db.Tx.Rollback()
+		panic(err)
+	}
+
+	return users, nil
+}
+
 func (d *db) UserCreate(input models.User) (*models.User, error) {
 
 	err := d.Tx.Model(&models.User{}).Create(&input).Error

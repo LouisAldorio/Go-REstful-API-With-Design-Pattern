@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"myapp/interfaces"
 	"myapp/middlewares"
 	"myapp/models"
@@ -13,6 +12,7 @@ import (
 	services "myapp/services/db"
 
 	"github.com/gin-gonic/gin"
+	"myapp/dataloader"
 )
 
 var (
@@ -44,7 +44,11 @@ func (c *userController) Register(ctx *gin.Context) {
 	})
 
 	if err != nil {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		ctx.JSON(http.StatusUnauthorized, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  err.Error(),
+		})
 		return
 	}
 
@@ -53,8 +57,12 @@ func (c *userController) Register(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, dto.UserTokenResponse{
-		Token: middlewares.JwtGenerate(user.ID),
+	ctx.JSON(http.StatusOK, dto.Response{
+		Status: true,
+		Data: dto.UserTokenResponse{
+			Token: middlewares.JwtGenerate(user.ID),
+		},
+		Error: "",
 	})
 }
 
@@ -71,12 +79,20 @@ func (c *userController) Login(ctx *gin.Context) {
 
 	user, err := services.Database.UserGetByEmail(input.Email)
 	if err != nil {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		ctx.JSON(http.StatusNotFound, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  err.Error(),
+		})
 		return
 	}
 
 	if user.Password != input.Password {
-		ctx.AbortWithError(http.StatusUnauthorized, err)
+		ctx.JSON(http.StatusUnauthorized, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  "Invalid Password!",
+		})
 		return
 	}
 
@@ -85,8 +101,12 @@ func (c *userController) Login(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, dto.UserTokenResponse{
-		Token: middlewares.JwtGenerate(user.ID),
+	ctx.JSON(http.StatusOK, dto.Response{
+		Status: true,
+		Data: dto.UserTokenResponse{
+			Token: middlewares.JwtGenerate(user.ID),
+		},
+		Error: "",
 	})
 }
 
@@ -94,11 +114,80 @@ func (c *userController) Me(ctx *gin.Context) {
 
 	tx := services.BeginTransaction()
 
-	user := middlewares.AuthCtx(ctx.Request.Context())
-	fmt.Println(user)
+	authorizedUser := middlewares.AuthCtx(ctx.Request.Context())
+	if authorizedUser == nil {
+		ctx.JSON(http.StatusUnauthorized, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  "Not Logged In!",
+		})
+		return
+	}
+
+	user, err := services.Database.UserGetByID(authorizedUser.ID)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	 err = dataloader.TodoLoadByUserID(user)
+	 if err != nil {
+		ctx.JSON(http.StatusNotFound, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  err.Error(),
+		})
+		return
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		ctx.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
+
+	ctx.JSON(http.StatusOK, dto.Response{
+		Status: true,
+		Data:   user,
+		Error:  "",
+	})
+}
+
+func (c *userController) GetAll(ctx *gin.Context) {
+
+	tx := services.BeginTransaction()
+
+	users, err := services.Database.UserGetAll()
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	err = dataloader.TodoLoadByUserIDs(users)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.Response{
+		Status: true,
+		Data:   users,
+		Error:  "",
+	})
 }

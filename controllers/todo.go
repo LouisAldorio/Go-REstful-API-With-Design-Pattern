@@ -1,7 +1,13 @@
 package controllers
 
 import (
+	"myapp/dto"
 	"myapp/interfaces"
+	"myapp/middlewares"
+	"myapp/models"
+	services "myapp/services/db"
+	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,22 +22,273 @@ func init() {
 
 type todoController struct{}
 
-func (controller *todoController) GetAll(c *gin.Context) {
-	
+func (c *todoController) GetAll(ctx *gin.Context) {
+
+	authorizedUser := middlewares.AuthCtx(ctx.Request.Context())
+	if authorizedUser == nil {
+		ctx.JSON(http.StatusUnauthorized, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  "Not Logged In!",
+		})
+		return
+	}
+
+	tx := services.BeginTransaction()
+
+	user, err := services.Database.UserGetByID(authorizedUser.ID)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	todos, err := services.Database.TodoGetByUserID(user.ID)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.Response{
+		Status: true,
+		Data:   todos,
+		Error:  "",
+	})
 }
 
-func (controller *todoController) GetByID(c *gin.Context) {
-	
+func (c *todoController) GetByID(ctx *gin.Context) {
+
+	todoId, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, errH(err))
+		return
+	}
+
+	authorizedUser := middlewares.AuthCtx(ctx.Request.Context())
+	if authorizedUser == nil {
+		ctx.JSON(http.StatusUnauthorized, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  "Not Logged In!",
+		})
+		return
+	}
+
+	tx := services.BeginTransaction()
+
+	todo, err := services.Database.TodoGetByID(todoId)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.Response{
+		Status: true,
+		Data:   todo,
+		Error:  "",
+	})
 }
 
-func (controller *todoController) Create(c *gin.Context) {
-	
+func (c *todoController) Create(ctx *gin.Context) {
+
+	var newTodo dto.TodoParam
+	err := ctx.ShouldBind(&newTodo)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, errH(err))
+		return
+	}
+
+	authorizedUser := middlewares.AuthCtx(ctx.Request.Context())
+	if authorizedUser == nil {
+		ctx.JSON(http.StatusUnauthorized, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  "Not Logged In!",
+		})
+		return
+	}
+
+	tx := services.BeginTransaction()
+
+	todo, err := services.Database.TodoCreate(models.Todo{
+		Name:   newTodo.Name,
+		IsDone: false,
+		UserID: authorizedUser.ID,
+	})
+
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.Response{
+		Status: true,
+		Data:   todo,
+		Error:  "",
+	})
 }
 
-func (controller *todoController) Update(c *gin.Context) {
-	
+func (c *todoController) Update(ctx *gin.Context) {
+
+	todoId, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, errH(err))
+		return
+	}
+
+	var todo dto.TodoUpdateParam
+	err = ctx.ShouldBind(&todo)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, errH(err))
+		return
+	}
+
+	authorizedUser := middlewares.AuthCtx(ctx.Request.Context())
+	if authorizedUser == nil {
+		ctx.JSON(http.StatusUnauthorized, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  "Not Logged In!",
+		})
+		return
+	}
+
+	tx := services.BeginTransaction()
+
+	tobeUpdatedTodo, err := services.Database.TodoGetByID(todoId)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	if tobeUpdatedTodo.UserID != authorizedUser.ID {
+		ctx.JSON(http.StatusUnauthorized, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  "not allowed to updated other todo!",
+		})
+		return
+	}
+
+	newUpdatedTodo, err := services.Database.TodoUpdate(models.Todo{
+		ID:     todoId,
+		Name:   todo.Name,
+		IsDone: todo.IsDone,
+		UserID: authorizedUser.ID,
+	})
+
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.Response{
+		Status: true,
+		Data:   newUpdatedTodo,
+		Error:  "",
+	})
 }
 
-func (controller *todoController) Delete(c *gin.Context) {
-	
+func (c *todoController) Delete(ctx *gin.Context) {
+
+	todoId, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, errH(err))
+		return
+	}
+
+	authorizedUser := middlewares.AuthCtx(ctx.Request.Context())
+	if authorizedUser == nil {
+		ctx.JSON(http.StatusUnauthorized, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  "Not Logged In!",
+		})
+		return
+	}
+
+	tx := services.BeginTransaction()
+
+	tobeDeletedTodo, err := services.Database.TodoGetByID(todoId)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	if tobeDeletedTodo.UserID != authorizedUser.ID {
+		ctx.JSON(http.StatusUnauthorized, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  "not allowed to updated other todo!",
+		})
+		return
+	}
+
+	_, err = services.Database.TodoDelete(todoId)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.Response{
+		Status: true,
+		Data:   todoId,
+		Error:  "",
+	})
 }

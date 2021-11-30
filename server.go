@@ -15,7 +15,7 @@ import (
 
 func init() {
 	config.ConnectGorm()
-	migrations.Migrate()
+	migrations.RunMigrate()
 }
 
 func main() {

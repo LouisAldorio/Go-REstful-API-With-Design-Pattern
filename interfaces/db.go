@@ -8,6 +8,7 @@ type DBInterface interface {
 	UserCreate(models.User) (*models.User, error)
 	UserGetByID(int) (*models.User, error)
 	UserGetByEmail(string) (*models.User, error)
+	UserGetAll() ([]*models.User, error)
 
 	// Todo
 	TodoCreate(models.Todo) (*models.Todo, error)
@@ -15,4 +16,5 @@ type DBInterface interface {
 	TodoGetByUserID(int) ([]*models.Todo, error)
 	TodoUpdate(models.Todo) (*models.Todo, error)
 	TodoDelete(int) (*int, error)
+	TodoGetByWhereInUserIDs([]int) ([]*models.Todo, error)
 }
