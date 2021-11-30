@@ -22,6 +22,17 @@ func init() {
 
 type todoController struct{}
 
+
+// @Summary Get All todo attached to logged in user
+// @Description Get All todo attached to logged in user, return list of todos
+// @Tags todos
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authorization"
+// @Success 200 {object} dto.Response
+// @Failure 401
+// @Failure 500
+// @Router /api/users [get]
 func (c *todoController) GetAll(ctx *gin.Context) {
 
 	authorizedUser := middlewares.AuthCtx(ctx.Request.Context())

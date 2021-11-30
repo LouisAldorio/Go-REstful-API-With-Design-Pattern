@@ -18,6 +18,9 @@ func init() {
 	migrations.RunMigrate()
 }
 
+
+// @title           Swagger Example API
+// @version         1.0
 func main() {
 	db := config.GetDB()
 	sqlDB, _ := db.DB()
@@ -35,6 +38,7 @@ func main() {
 	}), middlewares.Panic)
 
 	routers.ApiRoute(router)
+	routers.DocsRoute(router)
 
 	log.Println("Listen and serve at http://localhost:" + port)
 	router.Run(":" + port)

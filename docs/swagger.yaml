@@ -1,0 +1,40 @@
+definitions:
+  dto.Response:
+    properties:
+      data: {}
+      error:
+        type: string
+      status:
+        type: boolean
+    type: object
+info:
+  contact: {}
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /api/users:
+    get:
+      consumes:
+      - application/json
+      description: Get All todo attached to logged in user, return list of todos
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "401":
+          description: ""
+        "500":
+          description: ""
+      summary: Get All todo attached to logged in user
+      tags:
+      - todos
+swagger: "2.0"

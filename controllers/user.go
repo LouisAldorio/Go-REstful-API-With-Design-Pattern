@@ -25,6 +25,8 @@ func init() {
 
 type userController struct{}
 
+
+
 func (c *userController) Register(ctx *gin.Context) {
 
 	tx := services.BeginTransaction()

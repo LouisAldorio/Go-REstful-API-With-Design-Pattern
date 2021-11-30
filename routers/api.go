@@ -13,17 +13,19 @@ func ApiRoute(router *gin.Engine) {
 
 	router.Use(middlewares.AuthMiddleware())
 
-	// User
-	router.POST("/user/register", controllers.UserController.Register)
-	router.POST("/user/login", controllers.UserController.Login)
-	router.GET("/user/me", controllers.UserController.Me)
+	apiRouter := router.Group("/api")
 
-	router.GET("/users", controllers.UserController.GetAll)
+	// User
+	apiRouter.POST("/user/register", controllers.UserController.Register)
+	apiRouter.POST("/user/login", controllers.UserController.Login)
+	apiRouter.GET("/user/me", controllers.UserController.Me)
+
+	apiRouter.GET("/users", controllers.UserController.GetAll)
 
 	// Todo
-	router.GET("/todos", controllers.TodoController.GetAll)
-	router.GET("/todos/:id", controllers.TodoController.GetByID)
-	router.POST("/todos", controllers.TodoController.Create)
-	router.PUT("/todos/:id", controllers.TodoController.Update)
-	router.DELETE("/todos/:id", controllers.TodoController.Delete)
+	apiRouter.GET("/todos", controllers.TodoController.GetAll)
+	apiRouter.GET("/todos/:id", controllers.TodoController.GetByID)
+	apiRouter.POST("/todos", controllers.TodoController.Create)
+	apiRouter.PUT("/todos/:id", controllers.TodoController.Update)
+	apiRouter.DELETE("/todos/:id", controllers.TodoController.Delete)
 }
