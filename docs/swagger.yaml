@@ -57,6 +57,32 @@ paths:
       summary: Get All todo attached to logged in user
       tags:
       - todos
+  /api/todos/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get certain todo by id
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+        "500":
+          description: ""
+      summary: Get certain todo by id
+      tags:
+      - todos
   /api/user/register:
     post:
       consumes:

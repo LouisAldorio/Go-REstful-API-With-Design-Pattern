@@ -79,6 +79,17 @@ func (c *todoController) GetAll(ctx *gin.Context) {
 	})
 }
 
+
+// @Summary Get certain todo by id
+// @Description Get certain todo by id
+// @Tags todos
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authorization"
+// @Param id path string true "Todo ID"
+// @Success 200
+// @Failure 500
+// @Router /api/todos/{id} [get]
 func (c *todoController) GetByID(ctx *gin.Context) {
 
 	todoId, err := strconv.Atoi(ctx.Param("id"))
