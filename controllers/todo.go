@@ -32,7 +32,7 @@ type todoController struct{}
 // @Success 200 {object} dto.Response
 // @Failure 401
 // @Failure 500
-// @Router /api/users [get]
+// @Router /api/todos [get]
 func (c *todoController) GetAll(ctx *gin.Context) {
 
 	authorizedUser := middlewares.AuthCtx(ctx.Request.Context())

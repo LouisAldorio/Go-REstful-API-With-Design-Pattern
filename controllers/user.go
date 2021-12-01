@@ -26,15 +26,35 @@ func init() {
 type userController struct{}
 
 
-
+// @Summary Register New User
+// @Description Register new user to the system
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param AdminData body dto.UserRegisterParam true "User registration Data"
+// @Success 200 {object} dto.Response
+// @Failure 401
+// @Failure 500
+// @Router /api/user/register [post]
 func (c *userController) Register(ctx *gin.Context) {
-
-	tx := services.BeginTransaction()
 
 	var input dto.UserRegisterParam
 	err := ctx.ShouldBind(&input)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, errH(err))
+		return
+	}
+
+	tx := services.BeginTransaction()
+
+	_, err = services.Database.UserGetByEmail(input.Email)
+	if err == nil {
+		tx.Rollback()
+		ctx.JSON(http.StatusBadRequest, dto.Response{
+			Status: false,
+			Data:   nil,
+			Error:  "Email already exists!",
+		})
 		return
 	}
 
@@ -70,8 +90,6 @@ func (c *userController) Register(ctx *gin.Context) {
 
 func (c *userController) Login(ctx *gin.Context) {
 
-	tx := services.BeginTransaction()
-
 	var input dto.UserLoginParam
 	err := ctx.ShouldBind(&input)
 	if err != nil {
@@ -79,8 +97,11 @@ func (c *userController) Login(ctx *gin.Context) {
 		return
 	}
 
+	tx := services.BeginTransaction()
+
 	user, err := services.Database.UserGetByEmail(input.Email)
 	if err != nil {
+		tx.Rollback()
 		ctx.JSON(http.StatusNotFound, dto.Response{
 			Status: false,
 			Data:   nil,

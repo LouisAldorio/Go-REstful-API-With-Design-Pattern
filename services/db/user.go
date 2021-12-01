@@ -56,7 +56,6 @@ func (d *db) UserGetByEmail(email string) (*models.User, error) {
 			d.Tx.Rollback()
 			panic(err)
 		} else {
-			d.Tx.Rollback()
 			return nil, fmt.Errorf("user not available")
 		}
 	}

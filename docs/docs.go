@@ -23,7 +23,7 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/users": {
+        "/api/todos": {
             "get": {
                 "description": "Get All todo attached to logged in user, return list of todos",
                 "consumes": [
@@ -60,6 +60,46 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/api/user/register": {
+            "post": {
+                "description": "Register new user to the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Register New User",
+                "parameters": [
+                    {
+                        "description": "User registration Data",
+                        "name": "AdminData",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserRegisterParam"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Response"
+                        }
+                    },
+                    "401": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -72,6 +112,32 @@ var doc = `{
                 },
                 "status": {
                     "type": "boolean"
+                }
+            }
+        },
+        "dto.UserRegisterParam": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "louisaldorio@gmail.com"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 5,
+                    "example": "Louis Aldorio"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 4,
+                    "example": "12345"
                 }
             }
         }
