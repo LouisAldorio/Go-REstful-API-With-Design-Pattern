@@ -7,6 +7,15 @@ definitions:
       status:
         type: boolean
     type: object
+  dto.TodoParam:
+    properties:
+      name:
+        example: Eat Breakfast
+        maxLength: 255
+        type: string
+    required:
+    - name
+    type: object
   dto.UserRegisterParam:
     properties:
       email:
@@ -55,6 +64,34 @@ paths:
         "500":
           description: ""
       summary: Get All todo attached to logged in user
+      tags:
+      - todos
+    post:
+      consumes:
+      - application/json
+      description: Create New todo that add to todo list
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: todo data
+        in: body
+        name: AdminData
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TodoParam'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Response'
+        "500":
+          description: ""
+      summary: Create New Todo
       tags:
       - todos
   /api/todos/{id}:

@@ -132,6 +132,17 @@ func (c *todoController) GetByID(ctx *gin.Context) {
 	})
 }
 
+
+// @Summary Create New Todo
+// @Description Create New todo that add to todo list
+// @Tags todos
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authorization"
+// @Param AdminData body dto.TodoParam true "todo data"
+// @Success 200 {object} dto.Response
+// @Failure 500
+// @Router /api/todos [post]
 func (c *todoController) Create(ctx *gin.Context) {
 
 	var newTodo dto.TodoParam
